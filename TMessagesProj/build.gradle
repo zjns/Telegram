@@ -1,6 +1,18 @@
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 apply plugin: 'com.android.library'
+import java.util.regex.Pattern
+import java.nio.file.Paths
+import org.gradle.internal.os.OperatingSystem
+
+def static findInPath(String executable) {
+    return System.getenv("PATH").split(File.pathSeparator).collect { folder ->
+        return Paths.get("${folder}${File.separator}${executable}${OperatingSystem.current().windows ? ".exe" : ""}")
+                .toFile()
+    }.find { path ->
+        path.exists()
+    }?.absolutePath
+}
 
 repositories {
     mavenCentral()
@@ -91,6 +103,16 @@ android {
             cmake {
                 version '3.10.2'
                 arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-16', "-j=16"
+                def ccache = findInPath("ccache")
+                if (ccache) {
+                    println("Using ccache $ccache")
+                    arguments += "-DANDROID_CCACHE=$ccache"
+                }
+                def arch = getArch()
+                if (arch) {
+                    println("Only build for arch $arch")
+                    abiFilters arch
+                }
             }
         }
     }
@@ -176,4 +198,40 @@ def getProps(String propName) {
         return "";
     }
 }
+
+def getCurrentCommand(Boolean isFlavor) {
+    def taskReqStr = gradle.startParameter.taskRequests.toString()
+    Pattern pattern
+    if (taskReqStr.contains("assemble")) {
+        pattern = Pattern.compile(".*assemble(\\w+)(Release|Debug|Standalone).*")
+    } else if (taskReqStr.contains("install")) {
+        pattern = Pattern.compile(".*install(\\w+)(Release|Debug|Standalone).*")
+    } else {
+        pattern = Pattern.compile(".*generate(\\w+)(Release|Debug|Standalone).*")
+    }
+    def matcher = pattern.matcher(taskReqStr)
+    def group = isFlavor ? 1 : 2
+    if (matcher.matches()) {
+        String str = matcher.group(group)
+        return str.substring(0, 1).toLowerCase() + str.substring(1)
+    } else return ""
+}
+
+def getArch() {
+    def flavor = getCurrentCommand(true)
+    String arch
+    if (flavor.startsWith("arm64")) {
+        arch = "arm64-v8a"
+    } else if (flavor.startsWith("armv7")) {
+        arch = "armeabi-v7a"
+    } else if (flavor.startsWith("x64")) {
+        arch = "x86_64"
+    } else if (flavor.startsWith("x86")) {
+        arch = "x86"
+    } else {
+        arch = ""
+    }
+    return arch
+}
+
 apply plugin: 'com.google.gms.google-services'

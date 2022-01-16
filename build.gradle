@@ -1,3 +1,5 @@
+import java.util.regex.Pattern
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
@@ -14,3 +16,110 @@ buildscript {
 repositories {
     google()
 }
+
+task clean(type: Delete) {
+    delete(rootProject.buildDir)
+}
+
+rootProject.ext.buildVars = "TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java"
+
+def replaceAppId() {
+    println("!!! Start replace api id and api hash")
+    def buildVars = rootProject.file(rootProject.ext.buildVars)
+    def path = rootProject.file(rootProject.ext.buildVars).path
+    String[] commands = ["git", "restore", path]
+    def restore = Runtime.runtime.exec(commands)
+    restore.waitFor()
+
+    def apiId = System.getenv("API_ID")
+    def apiHash = System.getenv("API_HASH")
+    def apiKeysFile = rootProject.file("api_keys.properties")
+    if (apiKeysFile.exists()) {
+        def prop = new Properties()
+        prop.load(new FileInputStream(apiKeysFile))
+        apiId = prop.getProperty("api.id")
+        apiHash = prop.getProperty("api.hash")
+    }
+
+    if (apiId == null || apiHash == null) return
+    def scanner = new BufferedReader(new FileReader(buildVars))
+    def texts = []
+    while (true) {
+        def line = scanner.readLine()
+        if (line != null) {
+            texts.add(line)
+        } else break
+    }
+
+    buildVars.delete()
+    def writer = new BufferedWriter(new FileWriter(buildVars))
+    def apiIdRegex = Pattern.compile("^(.*APP_ID)\\s*=\\s*(\\d+);\\s*\$")
+    def apiHashRegex = Pattern.compile("^(.*APP_HASH)\\s*=\\s*\"(.*)\";\\s*\$")
+    def debugRegex = Pattern.compile("^(.*DEBUG_VERSION)\\s*=\\s*(.*);\\s*\$")
+    def logRegex = Pattern.compile("^(.*LOGS_ENABLED)\\s*=\\s*(.*);\\s*\$")
+    texts.each { String line ->
+        def idMatcher = apiIdRegex.matcher(line)
+        def hashMatcher = apiHashRegex.matcher(line)
+        def debugMatcher = debugRegex.matcher(line)
+        def logMatcher = logRegex.matcher(line)
+        if (idMatcher.matches()) {
+            def originId = idMatcher.group(2)
+            def replaced = idMatcher.replaceAll("\$1 = $apiId;")
+            writer.write(replaced)
+            println("Replace api id from $originId to $apiId")
+        } else if (hashMatcher.matches()) {
+            def originHash = hashMatcher.group(2)
+            def replaced = hashMatcher.replaceAll("\$1 = \"$apiHash\";")
+            writer.write(replaced)
+            println("Replace api hash from $originHash to $apiHash")
+        } else if (debugMatcher.matches()) {
+            def replaced = debugMatcher.replaceAll("\$1 = false;")
+            writer.write(replaced)
+        } else if (logMatcher.matches()) {
+            def replaced = logMatcher.replaceAll("\$1 = false;")
+            writer.write(replaced)
+        } else {
+            writer.write(line)
+        }
+        writer.newLine()
+    }
+    writer.flush()
+}
+
+def restoreAppId() {
+    println("!!! Start restore api id and api hash")
+    def path = rootProject.file(rootProject.ext.buildVars).path
+    String[] commands = ["git", "restore", path]
+    def restore = Runtime.runtime.exec(commands)
+    restore.waitFor()
+}
+
+gradle.addBuildListener(new BuildListener() {
+    @Override
+    void settingsEvaluated(Settings settings) {}
+
+    @Override
+    void projectsLoaded(Gradle gradle) {}
+
+    @Override
+    void projectsEvaluated(Gradle gradle) {
+        def taskReqStr = gradle.startParameter.taskRequests.toString()
+        if (taskReqStr.contains("assemble") || taskReqStr.contains("install")) {
+            replaceAppId()
+        }
+    }
+
+    @Override
+    void buildFinished(BuildResult buildResult) {
+        def taskReqStr = gradle.startParameter.taskRequests.toString()
+        if (taskReqStr.contains("assemble") || taskReqStr.contains("install")) {
+            restoreAppId()
+        }
+        if (buildResult.failure == null && rootProject.ext.has("apkPath")) {
+            def apkPath = rootProject.ext.apkPath
+            if (apkPath != null && !apkPath.empty) {
+                println(String.format("build apk:\n%s", apkPath))
+            }
+        }
+    }
+})

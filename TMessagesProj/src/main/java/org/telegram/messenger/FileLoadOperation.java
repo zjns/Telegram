@@ -216,6 +216,9 @@ public class FileLoadOperation {
             maxDownloadRequests = 4;
             maxDownloadRequestsBig = 4;
         }
+        downloadChunkSizeBig = 1024 * 1024;
+        maxDownloadRequests = 16;
+        maxDownloadRequestsBig = 16;
         maxCdnParts = (int) (FileLoader.DEFAULT_MAX_FILE_SIZE / downloadChunkSizeBig);
     }
 

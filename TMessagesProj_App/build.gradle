@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+import java.util.regex.Pattern
 
 repositories {
     mavenCentral()
@@ -25,7 +26,8 @@ android {
     compileSdkVersion 33
     buildToolsVersion '33.0.0'
 
-    defaultConfig.applicationId = APP_PACKAGE
+    //defaultConfig.applicationId = APP_PACKAGE
+    defaultConfig.applicationId = "org.electron.messager"
 
     sourceSets.main.jniLibs.srcDirs = ['../TMessagesProj/jni/']
 
@@ -52,6 +54,10 @@ android {
             storePassword RELEASE_STORE_PASSWORD
             keyAlias RELEASE_KEY_ALIAS
             keyPassword RELEASE_KEY_PASSWORD
+            enableV1Signing = false
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = false
         }
 
         release {
@@ -59,6 +65,42 @@ android {
             storePassword RELEASE_STORE_PASSWORD
             keyAlias RELEASE_KEY_ALIAS
             keyPassword RELEASE_KEY_PASSWORD
+            enableV1Signing = false
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = false
+        }
+
+        def configFile = rootProject.file("signing.properties")
+        if (!configFile.exists()) {
+            def configUrl = System.getenv("KEYSTORE_URL")
+            if (configUrl != null && !configUrl.empty) {
+                def input = new URL(configUrl).openStream()
+                def os = new FileOutputStream(configFile)
+                os.write(input.readAllBytes())
+            }
+        }
+        if (configFile.exists()) {
+            production {
+                def prop = new Properties()
+                prop.load(new FileInputStream(configFile))
+                def path = prop.getProperty("keystore.path")
+                if (path.startsWith("http")) {
+                    def keyFile = rootProject.file("key.jks")
+                    def input = new URL(path).openStream()
+                    def os = new FileOutputStream(keyFile)
+                    os.write(input.readAllBytes())
+                    path = keyFile.path
+                }
+                storeFile rootProject.file(path)
+                storePassword prop.getProperty("keystore.password")
+                keyAlias prop.getProperty("key.alias")
+                keyPassword prop.getProperty("key.password")
+                enableV1Signing = false
+                enableV2Signing = true
+                enableV3Signing = true
+                enableV4Signing = false
+            }
         }
     }
 
@@ -78,7 +120,7 @@ android {
         standalone {
             debuggable false
             jniDebuggable false
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.production
             applicationIdSuffix ".web"
             minifyEnabled true
             multiDexEnabled true
@@ -89,7 +131,7 @@ android {
         release {
             debuggable false
             jniDebuggable false
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.production
             minifyEnabled true
             shrinkResources false
             multiDexEnabled true
@@ -139,6 +181,24 @@ android {
                 abiVersionCode = 2
             }
         }
+        arm64_SDK23 {
+            ndk {
+                abiFilters "arm64-v8a"
+            }
+            sourceSets.debug {
+                manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
+            }
+            sourceSets.release {
+                manifest.srcFile '../TMessagesProj/config/release/AndroidManifest_SDK23.xml'
+            }
+            sourceSets.standalone {
+                manifest.srcFile '../TMessagesProj/config/release/AndroidManifest_standalone.xml'
+            }
+            minSdkVersion 23
+            ext {
+                abiVersionCode = 7
+            }
+        }
         afat {
             ndk {
                 abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
@@ -160,19 +220,25 @@ android {
 
     defaultConfig.versionCode = Integer.parseInt(APP_VERSION_CODE)
 
+    def flavor = getCurrentCommand(true)
+    def buildType = getCurrentCommand(false)
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            outputFileName = "app.apk"
+            output.outputFileName = "Telegram-v${variant.versionName}-${variant.flavorName}-${variant.buildType.name}.apk"
             output.versionCodeOverride = defaultConfig.versionCode * 10 + variant.productFlavors.get(0).abiVersionCode
+            def path = output.outputFile.path
+            if (flavor && buildType && path.contains(flavor) && path.contains(buildType)) {
+                rootProject.ext.apkPath = path
+            }
         }
     }
 
-    variantFilter { variant ->
+    /*variantFilter { variant ->
         def names = variant.flavors*.name
         if (variant.buildType.name != "release" && !names.contains("afat")) {
             setIgnore(true)
         }
-    }
+    }*/
 
     defaultConfig {
         minSdkVersion 19
@@ -199,6 +265,24 @@ android {
     lintOptions {
         checkReleaseBuilds false
     }
+}
+
+def getCurrentCommand(Boolean isFlavor) {
+    def taskReqStr = gradle.startParameter.taskRequests.toString()
+    Pattern pattern
+    if (taskReqStr.contains("assemble")) {
+        pattern = Pattern.compile(".*assemble(\\w+)(Release|Debug|Standalone).*")
+    } else if (taskReqStr.contains("install")) {
+        pattern = Pattern.compile(".*install(\\w+)(Release|Debug|Standalone).*")
+    } else {
+        pattern = Pattern.compile(".*generate(\\w+)(Release|Debug|Standalone).*")
+    }
+    def matcher = pattern.matcher(taskReqStr)
+    def group = isFlavor ? 1 : 2
+    if (matcher.matches()) {
+        String str = matcher.group(group)
+        return str.substring(0, 1).toLowerCase() + str.substring(1)
+    } else return ""
 }
 
 apply plugin: 'com.google.gms.google-services'

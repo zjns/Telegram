@@ -1010,6 +1010,26 @@ public class MessagesController extends BaseController implements NotificationCe
         return getInstance(0).emojiPreferences;
     }
 
+    public static boolean allowScreenshot() {
+        return getGlobalMainSettings().getBoolean("allow_screenshot", false);
+    }
+
+    public static boolean allowCopy() {
+        return getGlobalMainSettings().getBoolean("allow_chat_forward", false);
+    }
+
+    public static boolean removeBitcoinMessage() {
+        return getGlobalMainSettings().getBoolean("disable_bitcoin_message", false);
+    }
+
+    public static boolean disableTypingCheck() {
+        return getGlobalMainSettings().getBoolean("disable_typing_check", false);
+    }
+
+    public static boolean preferMessages() {
+        return getGlobalMainSettings().getBoolean("prefer_messages", false);
+    }
+
     public MessagesController(int num) {
         super(num);
         ImageLoader.getInstance();
@@ -1082,6 +1102,7 @@ public class MessagesController extends BaseController implements NotificationCe
         suggestedLangCode = mainPreferences.getString("suggestedLangCode", "en");
         animatedEmojisZoom = mainPreferences.getFloat("animatedEmojisZoom", 0.625f);
         qrLoginCamera = mainPreferences.getBoolean("qrLoginCamera", false);
+        qrLoginCamera = true;
         saveGifsWithStickers = mainPreferences.getBoolean("saveGifsWithStickers", false);
         filtersEnabled = mainPreferences.getBoolean("filtersEnabled", false);
         getfileExperimentalParams = mainPreferences.getBoolean("getfileExperimentalParams", false);
@@ -1701,6 +1722,17 @@ public class MessagesController extends BaseController implements NotificationCe
                     suggestedFilters.add((TLRPC.TL_dialogFilterSuggested) vector.objects.get(a));
                 }
             }
+            for (DialogFilter filter : dialogFilters) {
+                if ("未读".equals(filter.name)) {
+                    for (TLRPC.TL_dialogFilterSuggested f : suggestedFilters) {
+                        if (f.filter.title.equals("Unread")) {
+                            suggestedFilters.remove(f);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
             getNotificationCenter().postNotificationName(NotificationCenter.suggestedFiltersLoaded);
         }));
     }
@@ -1958,6 +1990,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 TLRPC.TL_jsonBool bool = (TLRPC.TL_jsonBool) value.value;
                                 if (bool.value != qrLoginCamera) {
                                     qrLoginCamera = bool.value;
+                                    qrLoginCamera = true;
                                     editor.putBoolean("qrLoginCamera", qrLoginCamera);
                                     changed = true;
                                 }
@@ -7197,6 +7230,7 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean sendTyping(long dialogId, int threadMsgId, int action, String emojicon, int classGuid) {
+        if (MessagesController.disableTypingCheck()) return false;
         if (action < 0 || action >= sendingTypings.length || dialogId == 0) {
             return false;
         }
@@ -13937,6 +13971,10 @@ public class MessagesController extends BaseController implements NotificationCe
             } else if (baseUpdate instanceof TLRPC.TL_updateServiceNotification) {
                 TLRPC.TL_updateServiceNotification update = (TLRPC.TL_updateServiceNotification) baseUpdate;
                 if (update.popup && update.message != null && update.message.length() > 0) {
+                    String notSecure = LocaleController.getString(R.string.FreshDeviceNotSecure, "en");
+                    if (LocaleController.getInstance().isChinaEnv() && notSecure.equals(update.message)) {
+                        update.message = LocaleController.getString(R.string.FreshDeviceNotSecure, "zh_CN");
+                    }
                     AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.needShowAlert, 2, update.message, update.type));
                 }
                 if ((update.flags & 2) != 0) {
@@ -15838,6 +15876,27 @@ public class MessagesController extends BaseController implements NotificationCe
     public SponsoredMessagesInfo getSponsoredMessages(long dialogId) {
         SponsoredMessagesInfo info = sponsoredMessages.get(dialogId);
         if (info != null && (info.loading || Math.abs(SystemClock.elapsedRealtime() - info.loadTime) <= 5 * 60 * 1000)) {
+            ArrayList<MessageObject> messages = info.messages;
+            if (messages != null && !messages.isEmpty() && removeBitcoinMessage()) {
+                TLRPC.Chat chat = getChat(-dialogId);
+                for (int i = 0; i < messages.size(); i++) {
+                    MessageObject object = messages.get(i);
+                    if (!object.isSponsored() || object.viewsReloaded) {
+                        continue;
+                    }
+                    object.viewsReloaded = true;
+                    // delay 1-6 s, then mark as read
+                    int delay = 1000 + (int) (Math.random() * 5001);
+                    ApplicationLoader.applicationHandler.postDelayed(() -> {
+                        TLRPC.TL_channels_viewSponsoredMessage req = new TLRPC.TL_channels_viewSponsoredMessage();
+                        req.channel = MessagesController.getInputChannel(chat);
+                        req.random_id = object.sponsoredId;
+                        getConnectionsManager().sendRequest(req, (response, error) -> {
+                        });
+                    }, delay);
+                }
+                return null;
+            }
             return info;
         }
         TLRPC.Chat chat = getChat(-dialogId);
@@ -16517,7 +16576,12 @@ public class MessagesController extends BaseController implements NotificationCe
         for (int a = 0, N = reasons.size(); a < N; a++) {
             TLRPC.TL_restrictionReason reason = reasons.get(a);
             if ("all".equals(reason.platform) || !BuildVars.isStandaloneApp() && !BuildVars.isBetaApp() && "android".equals(reason.platform)) {
-                return reason.text;
+                String en = LocaleController.getString(R.string.CopyrightRestrictMessage, "en");
+                if (LocaleController.getInstance().isChinaEnv() && reason.text.equals(en)) {
+                    return LocaleController.getString(R.string.CopyrightRestrictMessage, "zh_CN");
+                } else {
+                    return reason.text;
+                }
             }
         }
         return null;
@@ -16643,13 +16707,13 @@ public class MessagesController extends BaseController implements NotificationCe
             if (type == 0) {
                 fragment.presentFragment(new ProfileActivity(args));
             } else if (type == 2) {
-                if (ChatObject.isForum(chat)) {
+                if (ChatObject.isForum(chat) && !preferMessages()) {
                     fragment.presentFragment(new TopicsFragment(args), true, true);
                 } else {
                     fragment.presentFragment(new ChatActivity(args), true, true);
                 }
             } else {
-                if (ChatObject.isForum(chat)) {
+                if (ChatObject.isForum(chat) && !preferMessages()) {
                     fragment.presentFragment(new TopicsFragment(args), closeLast);
                 } else {
                     fragment.presentFragment(new ChatActivity(args), closeLast);

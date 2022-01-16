@@ -1021,7 +1021,7 @@ public class MessagesStorage extends BaseController {
         });
     }
 
-    public void putPushMessage(MessageObject message) {
+    public void putPushMessage(MessageObject message, CountDownLatch latch) {
         storageQueue.postRunnable(() -> {
             try {
                 NativeByteBuffer data = new NativeByteBuffer(message.messageOwner.getObjectSize());
@@ -1064,8 +1064,16 @@ public class MessagesStorage extends BaseController {
                 state.dispose();
             } catch (Exception e) {
                 FileLog.e(e);
+            } finally {
+                if (latch != null) {
+                    latch.countDown();
+                }
             }
         });
+    }
+
+    public void putPushMessage(MessageObject message) {
+        putPushMessage(message, null);
     }
 
     public void clearLocalDatabase() {

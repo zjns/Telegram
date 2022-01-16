@@ -711,7 +711,11 @@ public class ContactsController extends BaseController {
                             }
                             if (!TextUtils.isEmpty(mname)) {
                                 if (!TextUtils.isEmpty(contact.first_name)) {
-                                    contact.first_name += " " + mname;
+                                    if (AndroidUtilities.isOnlyBaseChinese(contact.first_name) && AndroidUtilities.isOnlyBaseChinese(mname)) {
+                                        contact.first_name = mname + contact.first_name;
+                                    } else {
+                                        contact.first_name += " " + mname;
+                                    }
                                 } else {
                                     contact.first_name = mname;
                                 }
@@ -726,7 +730,11 @@ public class ContactsController extends BaseController {
                                 }
                                 if (!TextUtils.isEmpty(mname)) {
                                     if (!TextUtils.isEmpty(contact.first_name)) {
-                                        contact.first_name += " " + mname;
+                                        if (AndroidUtilities.isOnlyBaseChinese(contact.first_name) && AndroidUtilities.isOnlyBaseChinese(mname)) {
+                                            contact.first_name = mname + contact.first_name;
+                                        } else {
+                                            contact.first_name += " " + mname;
+                                        }
                                     } else {
                                         contact.first_name = mname;
                                     }
@@ -2688,6 +2696,25 @@ public class ContactsController extends BaseController {
                     return lastName.substring(0, maxLength);
                 }
                 result.append(lastName);
+            }
+        } else if (LocaleController.nameDisplayOrder == 3) {
+            if (lastName != null && lastName.length() > 0) {
+                if (maxLength > 0 && lastName.length() > maxLength + 2) {
+                    return lastName.substring(0, maxLength);
+                }
+                result.append(lastName);
+                if (firstName != null && firstName.length() > 0) {
+                    if (maxLength > 0 && result.length() + firstName.length() > maxLength) {
+                        result.append(firstName.charAt(0));
+                    } else {
+                        result.append(firstName);
+                    }
+                }
+            } else if (firstName != null && firstName.length() > 0) {
+                if (maxLength > 0 && firstName.length() > maxLength + 2) {
+                    return firstName.substring(0, maxLength);
+                }
+                result.append(firstName);
             }
         } else {
             if (lastName != null && lastName.length() > 0) {

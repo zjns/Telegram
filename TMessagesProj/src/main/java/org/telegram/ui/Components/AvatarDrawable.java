@@ -301,6 +301,32 @@ public class AvatarDrawable extends Drawable {
         stringBuilder.setLength(0);
         if (custom != null) {
             stringBuilder.append(custom);
+        } else if (firstName != null && AndroidUtilities.isOnlyBaseChinese(firstName)) {
+            if (firstName.length() == 2) {
+                stringBuilder.appendCodePoint(firstName.codePointAt(0));
+                if (Build.VERSION.SDK_INT > 17) {
+                    stringBuilder.append("\u200C");
+                }
+                stringBuilder.appendCodePoint(firstName.codePointAt(1));
+            } else if (lastName != null && lastName.length() > 0) {
+                stringBuilder.appendCodePoint(lastName.codePointAt(0));
+                if (Build.VERSION.SDK_INT > 17) {
+                    stringBuilder.append("\u200C");
+                }
+                if (firstName.length() > 0) {
+                    stringBuilder.appendCodePoint(firstName.codePointAt(0));
+                }
+            } else {
+                if (firstName.length() > 0) {
+                    stringBuilder.appendCodePoint(firstName.codePointAt(0));
+                    if (firstName.length() > 1) {
+                        if (Build.VERSION.SDK_INT > 17) {
+                            stringBuilder.append("\u200C");
+                        }
+                        stringBuilder.appendCodePoint(firstName.codePointAt(1));
+                    }
+                }
+            }
         } else {
             if (firstName != null && firstName.length() > 0) {
                 stringBuilder.append(takeFirstCharacter(firstName));

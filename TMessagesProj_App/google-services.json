@@ -1,34 +1,41 @@
 {
   "project_info": {
-    "project_number": "760348033671",
-    "firebase_url": "https://tmessages2.firebaseio.com",
-    "project_id": "tmessages2",
-    "storage_bucket": "tmessages2.appspot.com"
+    "project_number": "681192329691",
+    "project_id": "electron-messager",
+    "storage_bucket": "electron-messager.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:760348033671:android:f6afd7b67eae3860",
+        "mobilesdk_app_id": "1:681192329691:android:6fbd5c630c76a7cd1d17fe",
         "android_client_info": {
-          "package_name": "org.telegram.messenger"
+          "package_name": "org.electron.messager"
         }
       },
       "oauth_client": [
         {
-          "client_id": "760348033671-2hh8ebmuflsnjoc0kldkfells9rhtfni.apps.googleusercontent.com",
+          "client_id": "681192329691-ilrdlinu3bnrmka83r6b4mhqknaag79a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.electron.messager",
+            "certificate_hash": "9fb6684ebad7c11ea6a06a81a135c7defd010489"
+          }
+        },
+        {
+          "client_id": "681192329691-qq6os0hhb532u7i7gskloe63k2uq6chd.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+          "current_key": "AIzaSyBF0IGp29APPboeeiDuArFG9CPEr-m-BzY"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "760348033671-2hh8ebmuflsnjoc0kldkfells9rhtfni.apps.googleusercontent.com",
+              "client_id": "681192329691-qq6os0hhb532u7i7gskloe63k2uq6chd.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
@@ -37,27 +44,35 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:760348033671:android:dc022572c167a16c",
+        "mobilesdk_app_id": "1:681192329691:android:e38cd395d822fc301d17fe",
         "android_client_info": {
-          "package_name": "org.telegram.messenger.beta"
+          "package_name": "org.electron.messager.beta"
         }
       },
       "oauth_client": [
         {
-          "client_id": "760348033671-2hh8ebmuflsnjoc0kldkfells9rhtfni.apps.googleusercontent.com",
+          "client_id": "681192329691-a5lbdhuekgjpccqf55vm0tdrf8qh8lhg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.electron.messager.beta",
+            "certificate_hash": "9fb6684ebad7c11ea6a06a81a135c7defd010489"
+          }
+        },
+        {
+          "client_id": "681192329691-qq6os0hhb532u7i7gskloe63k2uq6chd.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+          "current_key": "AIzaSyBF0IGp29APPboeeiDuArFG9CPEr-m-BzY"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "760348033671-2hh8ebmuflsnjoc0kldkfells9rhtfni.apps.googleusercontent.com",
+              "client_id": "681192329691-qq6os0hhb532u7i7gskloe63k2uq6chd.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
@@ -66,27 +81,35 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:760348033671:android:7396e651423888c3f66e22",
+        "mobilesdk_app_id": "1:681192329691:android:11978fbab17632e51d17fe",
         "android_client_info": {
-          "package_name": "org.telegram.messenger.web"
+          "package_name": "org.electron.messager.web"
         }
       },
       "oauth_client": [
         {
-          "client_id": "760348033671-2hh8ebmuflsnjoc0kldkfells9rhtfni.apps.googleusercontent.com",
+          "client_id": "681192329691-qd2ak84h7bf7q69gcsm5rvrusgof6p1l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.electron.messager.web",
+            "certificate_hash": "9fb6684ebad7c11ea6a06a81a135c7defd010489"
+          }
+        },
+        {
+          "client_id": "681192329691-qq6os0hhb532u7i7gskloe63k2uq6chd.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+          "current_key": "AIzaSyBF0IGp29APPboeeiDuArFG9CPEr-m-BzY"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "760348033671-2hh8ebmuflsnjoc0kldkfells9rhtfni.apps.googleusercontent.com",
+              "client_id": "681192329691-qq6os0hhb532u7i7gskloe63k2uq6chd.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

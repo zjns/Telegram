@@ -188,7 +188,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 uploadSet.remove(path);
             }
         }
-        
+
         private void addUploadProgress(String path, long sz, float progress) {
             uploadProgresses.put(path, progress);
             uploadSize.put(path, sz);
@@ -670,7 +670,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         public boolean performMediaUpload;
 
         public boolean retriedToSend;
-        
+
         public int topMessageId;
 
         public TLRPC.InputMedia inputUploadMedia;
@@ -2934,6 +2934,14 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     }
 
                     if (res.message != null) {
+                        if (LocaleController.getInstance().isChinaEnv()) {
+                            res.message = res.message
+                                    .replace("Disconnected.", "已断开连接。")
+                                    .replace("Declined.", "已拒绝。")
+                                    .replace("Accepted.", "已同意。")
+                                    .replace("Session expired.", "会话已过期。")
+                                    .replace("Request canceled.", "请求已取消。");
+                        }
                         if (res.alert) {
                             if (parentFragment.getParentActivity() == null) {
                                 return;

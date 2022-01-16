@@ -6260,7 +6260,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 updateSelectedCount();
             } else {
-                if (canSelectTopics && getMessagesController().isForum(dialogId)) {
+                if (canSelectTopics && getMessagesController().isForum(dialogId) && !MessagesController.preferMessages()) {
                     Bundle bundle = new Bundle();
                     bundle.putLong("chat_id", -dialogId);
                     bundle.putBoolean("for_select", true);
@@ -6335,7 +6335,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 slowedReloadAfterDialogClick = true;
                 if (getMessagesController().checkCanOpenChat(args, DialogsActivity.this)) {
                     TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-                    if (chat != null && chat.forum && topicId == 0) {
+                    if (chat != null && chat.forum && topicId == 0 && !MessagesController.preferMessages()) {
                         if (SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW) {
                             presentFragment(new TopicsFragment(args));
                         } else {

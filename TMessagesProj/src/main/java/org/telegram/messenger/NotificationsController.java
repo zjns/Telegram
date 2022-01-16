@@ -60,6 +60,7 @@ import com.google.android.exoplayer2.util.Log;
 import org.telegram.messenger.support.LongSparseIntArray;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.tgnet.filter.msgobj.MessageObjectFilters;
 import org.telegram.ui.BubbleActivity;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.PopupNotificationActivity;
@@ -206,6 +207,7 @@ public class NotificationsController extends BaseController {
                 FileLog.d("delay reached");
             }
             if (!delayedPushMessages.isEmpty()) {
+                MessageObjectFilters.filter(delayedPushMessages);
                 showOrUpdateNotification(true);
                 delayedPushMessages.clear();
             }
@@ -843,7 +845,14 @@ public class NotificationsController extends BaseController {
                             popup = addToPopupMessages(popupArrayAdd, messageObject, dialogId, isChannel, preferences);
                         }
                         if (isFcm && (edited = messageObject.localEdit)) {
-                            getMessagesStorage().putPushMessage(messageObject);
+                            CountDownLatch latch = new CountDownLatch(1);
+                            getMessagesStorage().putPushMessage(messageObject, latch);
+                            try {
+                                latch.await();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            MessageObjectFilters.filter(messageObject);
                         }
                     }
                     continue;
@@ -852,7 +861,14 @@ public class NotificationsController extends BaseController {
                     continue;
                 }
                 if (isFcm) {
-                    getMessagesStorage().putPushMessage(messageObject);
+                    CountDownLatch latch = new CountDownLatch(1);
+                    getMessagesStorage().putPushMessage(messageObject, latch);
+                    try {
+                        latch.await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    MessageObjectFilters.filter(messageObject);
                 }
 
                 long originalDialogId = dialogId;
@@ -3416,6 +3432,7 @@ public class NotificationsController extends BaseController {
             dismissNotification();
             return;
         }
+        MessageObjectFilters.filter(pushMessages);
         try {
             getConnectionsManager().resumeNetworkMaybe();
 

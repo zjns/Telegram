@@ -78,6 +78,7 @@ import org.telegram.messenger.browser.Browser;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.tgnet.filter.msgobj.MessageObjectFilters;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
@@ -3228,8 +3229,24 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 TLRPC.Chat chat = profileActivity.getMessagesController().getChat(info.id);
                 if (profileActivity.getMessagesController().isChatNoForwards(chat)) {
                     if (fwdRestrictedHint != null) {
-                        fwdRestrictedHint.setText(ChatObject.isChannel(chat) && !chat.megagroup ? LocaleController.getString("ForwardsRestrictedInfoChannel", R.string.ForwardsRestrictedInfoChannel) :
-                                LocaleController.getString("ForwardsRestrictedInfoGroup", R.string.ForwardsRestrictedInfoGroup));
+                        boolean isChannel = ChatObject.isChannel(chat) && !chat.megagroup;
+                        boolean allowCopy = MessagesController.allowCopy();
+                        String strKey;
+                        int strId;
+                        if (isChannel && allowCopy) {
+                            strKey = "ForwardsRestrictedInfoChannel_B";
+                            strId = R.string.ForwardsRestrictedInfoChannel_B;
+                        } else if (isChannel) {
+                            strKey = "ForwardsRestrictedInfoChannel";
+                            strId = R.string.ForwardsRestrictedInfoChannel;
+                        } else if (allowCopy) {
+                            strKey = "ForwardsRestrictedInfoGroup_B";
+                            strId = R.string.ForwardsRestrictedInfoGroup_B;
+                        } else {
+                            strKey = "ForwardsRestrictedInfoGroup";
+                            strId = R.string.ForwardsRestrictedInfoGroup;
+                        }
+                        fwdRestrictedHint.setText(LocaleController.getString(strKey, strId));
                         fwdRestrictedHint.showForView(v, true);
                     }
                     return;
@@ -3237,7 +3254,10 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             }
             if (hasNoforwardsMessage()) {
                 if (fwdRestrictedHint != null) {
-                    fwdRestrictedHint.setText(LocaleController.getString("ForwardsRestrictedInfoBot", R.string.ForwardsRestrictedInfoBot));
+                    boolean allowCopy = MessagesController.allowCopy();
+                    String strKey = allowCopy ? "ForwardsRestrictedInfoBot_B" : "ForwardsRestrictedInfoBot";
+                    int strId = allowCopy ? R.string.ForwardsRestrictedInfoBot_B : R.string.ForwardsRestrictedInfoBot;
+                    fwdRestrictedHint.setText(LocaleController.getString(strKey, strId));
                     fwdRestrictedHint.showForView(v, true);
                 }
                 return;
@@ -4984,6 +5004,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             if (holder.getItemViewType() != 2 && holder.getItemViewType() != 3) {
                 String name = sharedMediaData[3].sections.get(section);
                 ArrayList<MessageObject> messageObjects = sharedMediaData[3].sectionArrays.get(name);
+                MessageObjectFilters.filter(messageObjects);
                 switch (holder.getItemViewType()) {
                     case 0: {
                         MessageObject messageObject = messageObjects.get(0);
@@ -5140,6 +5161,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
             ArrayList<MessageObject> messageObjects = sharedMediaData[currentType].messages;
+            MessageObjectFilters.filter(messageObjects);
             switch (holder.getItemViewType()) {
                 case 1: {
                     SharedDocumentCell sharedDocumentCell = (SharedDocumentCell) holder.itemView;
@@ -5427,6 +5449,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             if (holder.getItemViewType() == 0) {
                 ArrayList<MessageObject> messageObjects = sharedMediaData[0].getMessages();
+                MessageObjectFilters.filter(messageObjects);
                 int index = position - sharedMediaData[0].getStartOffset();
                 SharedPhotoVideoCell2 cell = (SharedPhotoVideoCell2) holder.itemView;
                 int oldMessageId = cell.getMessageId();
@@ -5907,6 +5930,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             if (currentType == 1) {
                 SharedDocumentCell sharedDocumentCell = (SharedDocumentCell) holder.itemView;
                 MessageObject messageObject = getItem(position);
+                MessageObjectFilters.filter(messageObject);
                 sharedDocumentCell.setDocument(messageObject, position != getItemCount() - 1);
                 if (isActionModeShowed) {
                     sharedDocumentCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
@@ -5916,6 +5940,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             } else if (currentType == 3) {
                 SharedLinkCell sharedLinkCell = (SharedLinkCell) holder.itemView;
                 MessageObject messageObject = getItem(position);
+                MessageObjectFilters.filter(messageObject);
                 sharedLinkCell.setLink(messageObject, position != getItemCount() - 1);
                 if (isActionModeShowed) {
                     sharedLinkCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
@@ -5925,6 +5950,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             } else if (currentType == 4) {
                 SharedAudioCell sharedAudioCell = (SharedAudioCell) holder.itemView;
                 MessageObject messageObject = getItem(position);
+                MessageObjectFilters.filter(messageObject);
                 sharedAudioCell.setMessageObject(messageObject, position != getItemCount() - 1);
                 if (isActionModeShowed) {
                     sharedAudioCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
@@ -5993,6 +6019,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             if (holder.getItemViewType() != 1) {
                 MessageObject messageObject = sharedMediaData[5].messages.get(position);
+                MessageObjectFilters.filter(messageObject);
                 TLRPC.Document document = messageObject.getDocument();
                 if (document != null) {
                     ContextLinkCell cell = (ContextLinkCell) holder.itemView;

@@ -4,3 +4,7 @@ build/
 obj/
 *.iml
 local.properties
+.cxx
+api_keys.properties
+signing.properties
+key.jks

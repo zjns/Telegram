@@ -461,7 +461,11 @@ public class ContactsAdapter extends RecyclerListView.SectionsAdapter {
                 } else {
                     ContactsController.Contact contact = ContactsController.getInstance(currentAccount).phoneBookContacts.get(position);
                     if (contact.first_name != null && contact.last_name != null) {
-                        textCell.setText(contact.first_name + " " + contact.last_name, false);
+                        if (AndroidUtilities.isOnlyBaseChinese(contact.first_name) && AndroidUtilities.isOnlyBaseChinese(contact.last_name)) {
+                            textCell.setText(contact.last_name + contact.first_name, false);
+                        } else {
+                            textCell.setText(contact.first_name + " " + contact.last_name, false);
+                        }
                     } else if (contact.first_name != null && contact.last_name == null) {
                         textCell.setText(contact.first_name, false);
                     } else {

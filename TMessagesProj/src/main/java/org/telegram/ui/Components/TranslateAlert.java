@@ -58,6 +58,7 @@ import org.telegram.messenger.Emoji;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
@@ -256,7 +257,9 @@ public class TranslateAlert extends Dialog {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         }
 
-        if (noforwards) {
+        if (MessagesController.allowScreenshot()) {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        } else if (noforwards) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
 

@@ -71,6 +71,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.tgnet.filter.msgobj.MessageObjectFilters;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Adapters.DialogsAdapter;
 import org.telegram.ui.Components.AnimatedEmojiDrawable;
@@ -609,6 +610,7 @@ public class DialogCell extends BaseCell {
         currentDialogId = dialog_id;
         lastDialogChangedTime = System.currentTimeMillis();
         message = messageObject;
+        MessageObjectFilters.filter(message);
         useMeForMyMessages = useMe;
         isDialogCell = false;
         lastMessageDate = date;
@@ -2526,6 +2528,7 @@ public class DialogCell extends BaseCell {
                         clearingDialog = MessagesController.getInstance(currentAccount).isClearingDialog(dialog.id);
                         groupMessages = MessagesController.getInstance(currentAccount).dialogMessage.get(dialog.id);
                         message = groupMessages != null && groupMessages.size() > 0 ? groupMessages.get(0) : null;
+                        MessageObjectFilters.filter(message);
                         lastUnreadState = message != null && message.isUnread();
                         TLRPC.Chat localChat = MessagesController.getInstance(currentAccount).getChat(-dialog.id);
                         boolean isForumCell = localChat != null && localChat.forum && !isTopic;
@@ -2697,6 +2700,7 @@ public class DialogCell extends BaseCell {
                 dialogMuted = false;
                 drawUnmute = false;
                 message = findFolderTopMessage();
+                MessageObjectFilters.filter(message);
                 if (message != null) {
                     dialogId = message.getDialogId();
                 } else {

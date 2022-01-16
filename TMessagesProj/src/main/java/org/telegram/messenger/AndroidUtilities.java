@@ -3099,6 +3099,17 @@ public class AndroidUtilities {
         }
     }
 
+    public static boolean isOnlyBaseChinese(String text) {
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c > '\u4E00' && c < '\u9FFF') {
+                continue;
+            }
+            return false;
+        }
+        return true;
+    }
+
     public static byte[] decodeQuotedPrintable(final byte[] bytes) {
         if (bytes == null) {
             return null;
@@ -4078,7 +4089,8 @@ public class AndroidUtilities {
             if (window == null) {
                 return;
             }
-            final boolean value = flagSecureReasons.containsKey(window) && flagSecureReasons.get(window).size() > 0;
+            boolean value = flagSecureReasons.containsKey(window) && flagSecureReasons.get(window).size() > 0;
+            if (MessagesController.allowScreenshot()) value = false;
             try {
                 if (value) {
                     window.addFlags(WindowManager.LayoutParams.FLAG_SECURE);

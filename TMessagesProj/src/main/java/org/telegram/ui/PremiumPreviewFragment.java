@@ -58,6 +58,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
+import org.telegram.messenger.time.FastDateFormat;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -90,11 +91,14 @@ import org.telegram.ui.Components.URLSpanNoUnderline;
 import org.telegram.ui.Components.URLSpanReplacement;
 import org.telegram.ui.Components.URLSpanUserMention;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PremiumPreviewFragment extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
     private final static boolean IS_PREMIUM_TIERS_UNAVAILABLE = true;
@@ -973,8 +977,46 @@ public class PremiumPreviewFragment extends BaseFragment implements Notification
                         return;
                     }
 
-                    SpannableString spannableString = new SpannableString(premiumPromo.status_text);
-                    MediaDataController.addTextStyleRuns(premiumPromo.status_entities, premiumPromo.status_text, spannableString);
+                    ArrayList<TLRPC.MessageEntity> statusEntities = premiumPromo.status_entities;
+                    String statusText = premiumPromo.status_text;
+                    if (LocaleController.getInstance().isChinaEnv()) {
+                        String enPrivacy = LocaleController.getString(R.string.PreviewPremiumPrivacy, "en");
+                        if (enPrivacy.equals(statusText)) {
+                            statusText = LocaleController.getString(R.string.PreviewPremiumPrivacy, "zh_CN");
+                            statusEntities = new ArrayList<>();
+                            TLRPC.TL_messageEntityTextUrl tos = new TLRPC.TL_messageEntityTextUrl();
+                            tos.offset = statusText.indexOf("《Telegram 服务协议》");
+                            tos.length = "《Telegram 服务协议》".length();
+                            tos.url = "https://telegram.org/tos";
+                            TLRPC.TL_messageEntityTextUrl privacy = new TLRPC.TL_messageEntityTextUrl();
+                            privacy.offset = statusText.indexOf("《隐私政策》");
+                            privacy.length = "《隐私政策》".length();
+                            privacy.url = "https://telegram.org/privacy";
+                            statusEntities.add(tos);
+                            statusEntities.add(privacy);
+                        } else if (statusText.startsWith("Your Premium Subscription is active.")) {
+                            Pattern pattern = Pattern.compile("(?s).*Extension\\sdate\\sis\\s([\\d.]+)\\..*");
+                            Matcher matcher = pattern.matcher(statusText);
+                            if (matcher.matches()) {
+                                FastDateFormat format = FastDateFormat.getInstance("yyyy年M月d日", Locale.CHINA);
+                                FastDateFormat parseFormat = FastDateFormat.getInstance("dd.MM.yyyy", Locale.ROOT);
+                                try {
+                                    String localDate = format.format(parseFormat.parse(matcher.group(1)));
+                                    String zhActive = LocaleController.getString(R.string.PreviewPremiumActive, "zh_CN");
+                                    statusText = String.format(zhActive, localDate);
+                                    statusEntities = new ArrayList<>();
+                                    TLRPC.TL_messageEntityTextUrl bot = new TLRPC.TL_messageEntityTextUrl();
+                                    bot.offset = statusText.indexOf("Premium Bot");
+                                    bot.length = "Premium Bot".length();
+                                    bot.url = "https://t.me/PremiumBot?start=status";
+                                    statusEntities.add(bot);
+                                } catch (ParseException ignored) {
+                                }
+                            }
+                        }
+                    }
+                    SpannableString spannableString = new SpannableString(statusText);
+                    MediaDataController.addTextStyleRuns(statusEntities, statusText, spannableString);
                     byte t = 0;
                     for (TextStyleSpan span : spannableString.getSpans(0, spannableString.length(), TextStyleSpan.class)) {
                         TextStyleSpan.TextStyleRun run = span.getTextStyleRun();

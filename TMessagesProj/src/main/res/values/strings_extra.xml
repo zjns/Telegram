@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="Customize">Customize</string>
+    <string name="CustomizeDisableBitcoinMsg">Remove bitcoin sponsored message</string>
+    <string name="CustomizeAllowForward">Ignore message copy and save limit</string>
+    <string name="CustomizeAllowScreenshot">Ignore forbidden screenshot limit</string>
+    <string name="CustomizeDisableTypingCheck">Don\'t show my input status</string>
+    <string name="CustomizePreferMessages">Prefer open chat as messages</string>
+
+    <string name="FreshDeviceNotSecure">For security reasons, you can\'t terminate older sessions from a device that you\'ve just connected. Please use an earlier connection or wait for a few hours.</string>
+    <string name="CopyrightRestrictMessage">This channel is unavailable due to copyright infringement.</string>
+    <string name="PreviewPremiumActive">Your Premium Subscription is active. Extension date is %1$s.\nManage in Premium Bot.</string>
+    <string name="PreviewPremiumPrivacy">By subscribing to Telegram Premium you agree to the Telegram Terms of Service and Privacy Policy.</string>
+
+    <string name="ForwardsRestrictedInfoChannel_B">Limited by server, can\'t unlock forward option.</string>
+    <string name="ForwardsRestrictedInfoGroup_B">Limited by server, can\'t unlock forward option.</string>
+    <string name="ForwardsRestrictedInfoBot_B">Limited by server, can\'t unlock forward option.</string>
+
+    <string name="LoginCodeMessage">---keep---</string>
+    <string name="NewDeviceMessage">---keep---</string>
+    <string name="NewWebLoginMessage">---keep---</string>
+    <string name="ConfirmWebLoginMessageAsk">---keep---</string>
+    <string name="ConfirmWebLoginMessage">---keep---</string>
+    <string name="WebLoginViaBotMessage">---keep---</string>
+    <string name="WebLoginViaBotMessageBotNoPerm">---keep---</string>
+    <string name="WebLoginViaBotMessageDisconnect">---keep---</string>
+    <string name="WebLoginViaBotMessageDisconnectNoPerm">---keep---</string>
+    <string name="TwoStepVerifyChanged">---keep---</string>
+    <string name="TwoStepVerifyDisabled">---keep---</string>
+    <string name="TwoStepVerifyEnabled">---keep---</string>
+    <string name="TwoStepVerifyResetAsk">---keep---</string>
+    <string name="TwoStepVerifyReset">---keep---</string>
+</resources>

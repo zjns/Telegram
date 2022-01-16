@@ -331,6 +331,15 @@ public class LocaleController {
         languages.add(localeInfo);
         languagesDict.put(localeInfo.shortName, localeInfo);
 
+        localeInfo = new LocaleInfo();
+        localeInfo.name = "简体中文";
+        localeInfo.nameEnglish = "Chinese (Simplified)";
+        localeInfo.shortName = localeInfo.pluralLangCode = "zh_cn";
+        localeInfo.pathToFile = null;
+        localeInfo.builtIn = true;
+        languages.add(localeInfo);
+        languagesDict.put(localeInfo.shortName, localeInfo);
+
         loadOtherLanguages();
         if (remoteLanguages.isEmpty()) {
             AndroidUtilities.runOnUIThread(() -> loadRemoteLanguages(UserConfig.selectedAccount));
@@ -979,6 +988,14 @@ public class LocaleController {
         return currentLocale;
     }
 
+    public boolean isChinaEnv() {
+        Locale locale = this.currentLocale;
+        if (locale == null) {
+            locale = Locale.getDefault();
+        }
+        return "zh".equalsIgnoreCase(locale.getLanguage()) && "cn".equalsIgnoreCase(locale.getCountry());
+    }
+
     public static String getCurrentLanguageName() {
         LocaleInfo localeInfo = getInstance().currentLocaleInfo;
         return localeInfo == null || TextUtils.isEmpty(localeInfo.name) ? getString("LanguageName", R.string.LanguageName) : localeInfo.name;
@@ -1029,6 +1046,25 @@ public class LocaleController {
 
     public static String getString(String key, int res) {
         return getInstance().getStringInternal(key, res);
+    }
+
+    public static String getString(int res, Locale locale) {
+        Configuration appConfig = ApplicationLoader.applicationContext.getResources().getConfiguration();
+        Configuration newConfig = new Configuration(appConfig);
+        newConfig.setLocale(locale);
+        Context context = ApplicationLoader.applicationContext.createConfigurationContext(newConfig);
+        return context.getString(res);
+    }
+
+    public static String getString(int res, String locale) {
+        String[] split = locale.split("_");
+        String lang = split[0];
+        String region = split.length > 1 ? split[1] : null;
+        if (region == null) {
+            return getString(res, new Locale(lang));
+        } else {
+            return getString(res, new Locale(lang, region));
+        }
     }
 
     public static String getString(String key, String fallback, int res) {
@@ -1778,7 +1814,7 @@ public class LocaleController {
         isRTL = lang.length() == 2 && (lang.equals("ar") || lang.equals("fa") || lang.equals("he") || lang.equals("iw")) ||
                 lang.startsWith("ar_") || lang.startsWith("fa_") || lang.startsWith("he_") || lang.startsWith("iw_")
                 || currentLocaleInfo != null && currentLocaleInfo.isRtl;
-        nameDisplayOrder = lang.equals("ko") ? 2 : 1;
+        nameDisplayOrder = isChinaEnv() ? 3 : lang.equals("ko") ? 2 : 1;
 
         formatterMonthYear = createFormatter(locale, getStringInternal("formatterMonthYear", R.string.formatterMonthYear), "MMM yyyy");
         formatterDayMonth = createFormatter(locale, getStringInternal("formatterMonth", R.string.formatterMonth), "dd MMM");
@@ -1790,7 +1826,7 @@ public class LocaleController {
         formatterWeekLong = createFormatter(locale, getStringInternal("formatterWeekLong", R.string.formatterWeekLong), "EEEE");
         formatterScheduleDay = createFormatter(locale, getStringInternal("formatDateSchedule", R.string.formatDateSchedule), "MMM d");
         formatterScheduleYear = createFormatter(locale, getStringInternal("formatDateScheduleYear", R.string.formatDateScheduleYear), "MMM d yyyy");
-        formatterDay = createFormatter(lang.toLowerCase().equals("ar") || lang.toLowerCase().equals("ko") ? locale : Locale.US, is24HourFormat ? getStringInternal("formatterDay24H", R.string.formatterDay24H) : getStringInternal("formatterDay12H", R.string.formatterDay12H), is24HourFormat ? "HH:mm" : "h:mm a");
+        formatterDay = createFormatter(lang.equals("ar") || lang.equals("ko") || isChinaEnv() ? locale : Locale.US, is24HourFormat ? getStringInternal("formatterDay24H", R.string.formatterDay24H) : getStringInternal("formatterDay12H", R.string.formatterDay12H), is24HourFormat ? "HH:mm" : "h:mm a");
         formatterStats = createFormatter(locale, is24HourFormat ? getStringInternal("formatterStats24H", R.string.formatterStats24H) : getStringInternal("formatterStats12H", R.string.formatterStats12H), is24HourFormat ? "MMM dd yyyy, HH:mm" : "MMM dd yyyy, h:mm a");
         formatterBannedUntil = createFormatter(locale, is24HourFormat ? getStringInternal("formatterBannedUntil24H", R.string.formatterBannedUntil24H) : getStringInternal("formatterBannedUntil12H", R.string.formatterBannedUntil12H), is24HourFormat ? "MMM dd yyyy, HH:mm" : "MMM dd yyyy, h:mm a");
         formatterBannedUntilThisYear = createFormatter(locale, is24HourFormat ? getStringInternal("formatterBannedUntilThisYear24H", R.string.formatterBannedUntilThisYear24H) : getStringInternal("formatterBannedUntilThisYear12H", R.string.formatterBannedUntilThisYear12H), is24HourFormat ? "MMM dd, HH:mm" : "MMM dd, h:mm a");

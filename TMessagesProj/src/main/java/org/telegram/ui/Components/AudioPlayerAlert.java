@@ -8,6 +8,8 @@
 
 package org.telegram.ui.Components;
 
+import static org.telegram.messenger.MessagesController.allowCopy;
+
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -1929,9 +1931,15 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
             }
             if (MessagesController.getInstance(currentAccount).isChatNoForwards(messageObject.getChatId())) {
                 optionsButton.hideSubItem(1);
-                optionsButton.hideSubItem(2);
-                optionsButton.hideSubItem(5);
-                optionsButton.setAdditionalYOffset(-AndroidUtilities.dp(16));
+                if (allowCopy()) {
+                    optionsButton.showSubItem(2);
+                    optionsButton.showSubItem(5);
+                    optionsButton.setAdditionalYOffset(-AndroidUtilities.dp(110));
+                } else {
+                    optionsButton.hideSubItem(2);
+                    optionsButton.hideSubItem(5);
+                    optionsButton.setAdditionalYOffset(-AndroidUtilities.dp(16));
+                }
             } else {
                 optionsButton.showSubItem(1);
                 optionsButton.showSubItem(2);
